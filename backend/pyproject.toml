@@ -5,7 +5,7 @@ description = ""
 authors = ["Shipyard <team@shipyard.build>"]
 
 [tool.poetry.dependencies]
-python = "3.8.7"
+python = "3.8.8"
 flask = "1.1.1"
 uwsgi = "2.0.18"
 flask-sqlalchemy = "2.4.1"
