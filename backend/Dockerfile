@@ -23,6 +23,7 @@ RUN apk add --update --no-cache \
 ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 
 # Install poetry
+RUN pip install --upgrade pip
 RUN pip install poetry
 
 # Create an app user, prepare permissions, and run as the user
