@@ -5,10 +5,12 @@ services:
   frontend:
     labels:
       shipyard.route: '/'
+      shipyard.primary-route: true
     build: 'frontend'
     environment:
       CI: 'true'
       DANGEROUSLY_DISABLE_HOST_CHECK: 'true'
+      REACT_APP_DOOM_URL: ${DOOM_URL}
     env_file:
       - frontend/frontend.env
     volumes:
@@ -16,6 +18,13 @@ services:
       - './frontend/public:/app/public'
     ports:
       - '3000:3000'
+
+  doom:
+    labels:
+      shipyard.route: '/'
+    image: 'elliottking/doom-wasm:0.1.1'
+    ports:
+      - '8000:8000'
 
   backend:
     labels:
