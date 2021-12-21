@@ -1,5 +1,6 @@
 import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
+import { useState } from 'react';
 import { Grid, Box, Link, Typography } from '@material-ui/core';
 import {
   makeStyles,
@@ -13,6 +14,7 @@ import DeployCard from './DeployCard';
 import MaterialCard from './MaterialCard';
 import ThemeCard from './ThemeCard';
 import UploadCard from './UploadCard';
+import DoomCard from './DoomCard';
 import DoomModal from './DoomModal';
 
 import logo from '../assets/images/logo.png';
@@ -99,11 +101,15 @@ const useStyles = makeStyles((theme) => ({
   iframe: {
     height: '625px',
     width: '840px',
+  },
+  doomButtonContainer: {
+    ['margin-top']: "5rem",
   }
 }));
 
 function App() {
   const classes = useStyles();
+  const [showModal, setShowModal] = useState(false);
 
   const theme = createMuiTheme({
     palette: {
@@ -114,7 +120,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <DoomModal classes={classes} />
+      {showModal && <DoomModal classes={classes} />}
       <Box>
         <Box className={classes.box} display="flex">
           <Box
@@ -173,6 +179,9 @@ function App() {
           </Box>
         </Box>
         <Grid container className={classes.container} spacing={2}>
+          <Grid item xs={12} sm={12} md={6} lg={4}>
+            <DoomCard classes={classes} handleClick={() => setShowModal(prev => !prev)}/>
+          </Grid>
           <Grid item xs={12} sm={12} md={6} lg={4}>
             <ThemeCard classes={classes} />
           </Grid>
