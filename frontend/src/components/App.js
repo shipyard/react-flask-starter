@@ -13,6 +13,7 @@ import DeployCard from './DeployCard';
 import MaterialCard from './MaterialCard';
 import ThemeCard from './ThemeCard';
 import UploadCard from './UploadCard';
+import DoomModal from './DoomModal';
 
 import logo from '../assets/images/logo.png';
 
@@ -86,6 +87,19 @@ const useStyles = makeStyles((theme) => ({
   link: {
     color: '#35baf6',
   },
+  modal: {
+    position: 'fixed',
+    height: 'fit-content',
+    width: 'fit-content',
+    left: "50%",
+    transform: "translate(-50%, 0)",
+    top: "150px",
+    ['z-index']: 9,
+  },
+  iframe: {
+    height: '625px',
+    width: '840px',
+  }
 }));
 
 function App() {
@@ -100,6 +114,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <DoomModal classes={classes} />
       <Box>
         <Box className={classes.box} display="flex">
           <Box

@@ -17,6 +17,11 @@ services:
     ports:
       - '3000:3000'
 
+  doom:
+    image: 'elliottking/doom-wasm:0.1.1'
+    ports:
+      - '8000:8000'
+
   backend:
     labels:
       shipyard.route: '/api'
