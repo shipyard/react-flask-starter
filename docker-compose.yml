@@ -10,7 +10,7 @@ services:
     environment:
       CI: 'true'
       DANGEROUSLY_DISABLE_HOST_CHECK: 'true'
-      REACT_APP_DOOM_URL: ${DOOM_URL}
+      REACT_APP_DOOM_URL: ${SHIPYARD_DOMAIN_DOOM}
     env_file:
       - frontend/frontend.env
     volumes:
