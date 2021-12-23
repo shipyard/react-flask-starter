@@ -1,0 +1,20 @@
+version: '2.1'
+orbs:
+  shipyard: shipyard/shipyard@3.1.0
+jobs:
+  print-env-data:
+    machine:
+      image: ubuntu-2004:202010-01
+    steps:
+      - checkout
+      - shipyard/fetch-shipyard-env
+      - run:
+          command: |
+            export CYPRESS_BASE_URL=${SHIPYARD_ENVIRONMENT_URL}
+            export CYPRESS_BYPASS_TOKEN=${SHIPYARD_BYPASS_TOKEN}
+            env | grep -e SHIPYARD -e CYPRESS
+          name: Print out the environment data
+workflows:
+  use-my-orb:
+    jobs:
+      - print-env-data
