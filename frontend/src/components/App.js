@@ -1,91 +1,91 @@
-import Prism from 'prismjs';
-import 'prismjs/themes/prism-tomorrow.css';
-import { Grid, Box, Link, Typography } from '@material-ui/core';
+import Prism from "prismjs";
+import "prismjs/themes/prism-tomorrow.css";
+import { Grid, Box, Link, Typography } from "@material-ui/core";
 import {
   makeStyles,
   createMuiTheme,
-  ThemeProvider,
-} from '@material-ui/core/styles';
-import CssBaseline from '@material-ui/core/CssBaseline';
+  ThemeProvider
+} from "@material-ui/core/styles";
+import CssBaseline from "@material-ui/core/CssBaseline";
 
-import ConnectCard from './ConnectCard';
-import DeployCard from './DeployCard';
-import MaterialCard from './MaterialCard';
-import ThemeCard from './ThemeCard';
-import UploadCard from './UploadCard';
+import ConnectCard from "./ConnectCard";
+import DeployCard from "./DeployCard";
+import MaterialCard from "./MaterialCard";
+import ThemeCard from "./ThemeCard";
+import UploadCard from "./UploadCard";
 
-import logo from '../assets/images/logo.png';
+import logo from "../assets/images/logo.png";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   container: {
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: '30px',
-    width: 'calc(100% - 16px)',
-    marginLeft: '8px',
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    padding: "30px",
+    width: "calc(100% - 16px)",
+    marginLeft: "8px"
   },
   card: {
-    height: '700px',
-    padding: '10px 25px',
-    overflow: 'auto',
+    height: "700px",
+    padding: "10px 25px",
+    overflow: "auto"
   },
   cardHeader: {
-    marginBottom: '30px',
+    marginBottom: "30px"
   },
   img: {
-    width: '210px',
-    background: 'white',
-    padding: '0 10px',
-    height: '100%',
-    margin: '0 20px',
+    width: "210px",
+    background: "white",
+    padding: "0 10px",
+    height: "100%",
+    margin: "0 20px"
   },
   box: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    [theme.breakpoints.down('sm')]: {
-      flexDirection: 'column',
-      textAlign: 'center',
-    },
+    flexDirection: "row",
+    alignItems: "center",
+    [theme.breakpoints.down("sm")]: {
+      flexDirection: "column",
+      textAlign: "center"
+    }
   },
   gridContainer: {
     marginTop: 20,
-    display: 'flex',
-    flexWrap: 'wrap',
-    width: 500,
+    display: "flex",
+    flexWrap: "wrap",
+    width: 500
   },
   form: {
-    marginTop: '50',
+    marginTop: "50"
   },
   response: {
-    fontFamily: 'monospace',
-    color: 'limeGreen',
-    fontSize: '1.3em',
-    background: 'black',
-    padding: '0px 5px',
+    fontFamily: "monospace",
+    color: "limeGreen",
+    fontSize: "1.3em",
+    background: "black",
+    padding: "0px 5px"
   },
   list: {
-    fontSize: '1.1em',
-    '& li': {
-      marginBottom: '8px',
-    },
+    fontSize: "1.1em",
+    "& li": {
+      marginBottom: "8px"
+    }
   },
   contained: {
-    color: 'white',
-    fontWeight: '600',
-    background: '#787878',
-    '&:hover': {
-      background: '#888',
+    color: "white",
+    fontWeight: "600",
+    background: "#787878",
+    "&:hover": {
+      background: "#888"
     },
     borderRadius: 5,
-    margin: '15px 0px',
+    margin: "15px 0px"
   },
   pre: {
-    whiteSpace: 'pre-wrap',
+    whiteSpace: "pre-wrap"
   },
   link: {
-    color: '#35baf6',
-  },
+    color: "#35baf6"
+  }
 }));
 
 function App() {
@@ -93,8 +93,8 @@ function App() {
 
   const theme = createMuiTheme({
     palette: {
-      type: 'dark',
-    },
+      type: "dark"
+    }
   });
 
   return (
@@ -113,7 +113,7 @@ function App() {
               Replace this with your logo:
             </Typography>
             <Typography variant="caption">
-              <code>'/frontend/src/assets/images/logo.png'</code>{' '}
+              <code>'/frontend/src/assets/images/logo.png'</code>{" "}
             </Typography>
           </Box>
           <Box mt={-2}>
@@ -152,7 +152,15 @@ function App() {
                 href="https://github.com/localstack/localstack"
               >
                 LocalStack
-              </Link>{' '}
+              </Link>{" "}
+              <Link
+                className={classes.link}
+                target="_blank"
+                rel="noopener"
+                href="https://github.com/localstack/localstack"
+              >
+                Hey
+              </Link>
               Starter Project
             </h1>
           </Box>
