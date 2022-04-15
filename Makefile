@@ -31,6 +31,10 @@ postgres.start:
 	docker-compose exec postgres \
 	  sh -c 'while ! nc -z postgres 5432; do sleep 0.1; done'
 
+migrations.stamp: postgres.start
+	docker-compose run worker \
+	  poetry run flask db stamp head
+
 migrations.blank: postgres.start
 	docker-compose run worker \
 	  poetry run flask db revision

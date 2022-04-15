@@ -5,6 +5,7 @@ class Counter(BaseModel):
 
     count = db.Column(db.Integer, default=0, nullable=False)
     label = db.Column(db.String(), nullable=False)
+    new_field1 = db.Column(db.String(), nullable=False)
 
     RESET_THRESHOLD = 1000000000
 
