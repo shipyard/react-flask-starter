@@ -14,7 +14,5 @@ jobs:
           timeout-minutes: "10"
       - name: Print Env Data
         run: |
-          export CYPRESS_BASE_URL=${SHIPYARD_ENVIRONMENT_URL}
-          export CYPRESS_BYPASS_TOKEN=${SHIPYARD_BYPASS_TOKEN}
-          env | grep -e SHIPYARD -e CYPRESS
+          echo $SHIPYARD_ENVIRONMENT_URL
         shell: bash

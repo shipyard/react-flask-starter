@@ -17,26 +17,40 @@ services:
     ports:
       - '3000:3000'
 
-  backend:
+  py-backend:
     labels:
       shipyard.route: '/api'
-    build: 'backend'
+    build:
+      context: 'backend/python'
     environment:
       DATABASE_URL: 'postgres://obscure-user:obscure-password@postgres/app'
       DEV: ${DEV}
       FLASK_DEBUG: '1'
       LOCALSTACK_HOST: 'localstack'
     volumes:
-      - './backend/filesystem/entrypoints:/entrypoints:ro'
-      - './backend/migrations:/srv/migrations'
-      - './backend/src:/srv/src:ro'
+      - './backend/python/filesystem/entrypoints:/entrypoints:ro'
+      - './backend/python/migrations:/srv/migrations'
+      - './backend/python/src:/srv/src:ro'
     ports:
       - '8080:8080'
-
+  go-backend:
+    labels:
+      shipyard.route: '/api/gif-search'
+    build:
+      context: '.'
+      dockerfile: backend/go/Dockerfile
+    environment:
+      DATABASE_URL: 'postgres://obscure-user:obscure-password@postgres/app'
+      WEB_SERVICE_PORT: 8081
+      GIPHY_API_KEY: ${GIPHY_API_KEY}
+      FILE_UPLOAD_ENDPOINT: "http://py-backend:8080/api/v1/files/upload/"
+    ports:
+      - '8081:8081'
   worker:
     labels:
       shipyard.init: 'poetry run flask db upgrade'
-    build: 'backend'
+    build:
+      context: 'backend/python'
     environment:
       DATABASE_URL: 'postgres://obscure-user:obscure-password@postgres/app'
       DEV: ${DEV}
@@ -44,9 +58,9 @@ services:
       LOCALSTACK_HOST: 'localstack'
     command: '/entrypoints/worker.sh'
     volumes:
-      - './backend/filesystem/entrypoints:/entrypoints:ro'
-      - './backend/migrations:/srv/migrations'
-      - './backend/src:/srv/src:ro'
+      - './backend/python/filesystem/entrypoints:/entrypoints:ro'
+      - './backend/python/migrations:/srv/migrations'
+      - './backend/python/src:/srv/src:ro'
 
   postgres:
     image: 'postgres:9.6-alpine'
@@ -72,7 +86,7 @@ services:
     volumes:
       - 'localstack:/tmp/localstack'
     ports:
-      - '4566'
+      - '4566:4566'
 
 volumes:
   postgres:
