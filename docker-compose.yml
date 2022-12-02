@@ -68,9 +68,9 @@ services:
   localstack:
     image: 'localstack/localstack'
     environment:
-      - DATA_DIR=/tmp/localstack/data
+      - DATA_DIR=/var/lib/localstack
     volumes:
-      - 'localstack:/tmp/localstack'
+      - 'localstack:/var/lib/localstack'
     ports:
       - '4566'
 
