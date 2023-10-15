@@ -66,13 +66,15 @@ services:
       - '6379'
 
   localstack:
-    image: 'localstack/localstack:1.3.0'
+    image: 'localstack/localstack:2.3.0'
     environment:
-      - DATA_DIR=/var/lib/localstack
+      - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
-      - 'localstack:/var/lib/localstack'
+      - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
     ports:
-      - '4566'
+      - "127.0.0.1:4566:4566"            # LocalStack Gateway
+      - "127.0.0.1:4510-4559:4510-4559"  # external services port range
 
 volumes:
   postgres:
