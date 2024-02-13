@@ -17,7 +17,7 @@ most recently on {date}.'
 @blueprint.route('/')
 def index():
     response = 'Flask server'
-    return jsonify(response=response)
+    return jsonify(response=response), 502
 
 
 @blueprint.route('/api/v1/reset/')
