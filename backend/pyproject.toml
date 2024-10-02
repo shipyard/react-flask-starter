@@ -18,6 +18,13 @@ flask-shell-ipython = "0.4.1"
 psycopg2 = "2.8.4"
 boto3 = "1.16.44"
 localstack-client = "1.10"
+# the following are not directly required, but because flask and other packages don't fully specify their own 
+# dependency versions, it's easy to get breaking dependency updates if these are not locked down.
+jinja2 = "2.11.3"
+markupsafe = "1.1.1"
+itsdangerous = "1.1.0"
+werkzeug = "1.0.1"
+sqlalchemy = "1.3.23"
 
 [tool.poetry.dev-dependencies]
 pytest = "5.2"
