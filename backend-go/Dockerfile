@@ -14,7 +14,7 @@ RUN go mod init helloworld
 RUN go build -o main .
 
 # Expose port 8080 to the outside world
-EXPOSE 8080
+EXPOSE 8081
 
 # Command to run the executable
 CMD ["./main"]

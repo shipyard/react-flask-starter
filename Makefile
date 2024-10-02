@@ -19,6 +19,10 @@ backend-shell:
 	docker compose run worker \
 	  sh
 
+backend-go-shell:
+	docker compose run backend-go \
+	  sh
+
 python-shell:
 	docker compose run worker \
 	  poetry run flask shell
