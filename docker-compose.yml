@@ -35,6 +35,11 @@ services:
 
   backend-go:
     build: 'backend-go'
+    env_file: '.env.development.local'
+    environment:
+      DATABASE_URL: 'postgres://obscure-user:obscure-password@postgres/app'
+      DEV: ${DEV}
+      LOCALSTACK_HOST: 'localstack'
     ports:
       - '8081:8081'
 
@@ -54,14 +59,17 @@ services:
       - './backend/src:/srv/src:ro'
 
   postgres:
-    image: 'postgres:9.6-alpine'
+    image: 'postgres:13'
     environment:
       POSTGRES_USER: 'obscure-user'
       POSTGRES_PASSWORD: 'obscure-password'
       POSTGRES_DB: 'app'
-      PGDATA: '/var/lib/postgresql/data/pgdata'
+      # PGDATA: '/var/lib/postgresql/data/pgdata'
+      PGDATA: '/var/lib/postgresql/data'
     volumes:
-      - 'postgres:/var/lib/postgresql/data'
+      # - 'postgres:/var/lib/postgresql/data'
+      - 'postgres:/var/lib/postgresql'
+      - './database/entrypoint:/docker-entrypoint-initdb.d'
     ports:
       - '5432'
 
