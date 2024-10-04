@@ -27,13 +27,20 @@ python-shell:
 	docker compose run worker \
 	  poetry run flask shell
 
+postgres-shell:
+	docker compose run postgres \
+		sh
+
 postgres.data.delete: clean
 	docker volume rm $(VOLUME)_postgres
 
 postgres.start:
 	docker compose up -d postgres
 	docker compose exec postgres \
-	  sh -c 'while ! nc -z postgres 5432; do sleep 0.1; done'
+	sh -c 'sleep 1'
+	# The 'nc' command is not available on the updated postgres image; Change to use our own version of the Dockerfile 
+	# and install or find some alternate.
+	  # sh -c 'while ! nc -z postgres 5432; do sleep 0.1; done'
 
 migrations.blank: postgres.start
 	docker compose run worker \
