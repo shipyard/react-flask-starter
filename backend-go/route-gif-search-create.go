@@ -5,6 +5,7 @@ import (
     "encoding/json"
     "fmt"
     "io"
+    "log"
     "net/http"
     "os"
     "strings"
@@ -45,16 +46,38 @@ func gifSearchCreate(w http.ResponseWriter, r *http.Request) {
     q.Add("api_key", apiKey)
     q.Add("q", strings.Join(searchTerms, ","))
     q.Add("limit", SEARCH_LIMIT)
-    req.URL.RawQuery = q.Encode()
+    req.URL.RawQuery = q.Encode() // go is weird how you set the URL parameters
 
-    resp, err := client.Do(req)
-    if err != nil {
-        serverError(w, "Could not execute request.", err)
-        return
+    var giphyResp *http.Response
+    const retryAttempts = 4
+    retries := 0
+    for giphyResp == nil && retries < retryAttempts { // will actually exit before failing loop, but for clarity
+        giphyResp, err = client.Do(req)
+        retries += 1
+
+        if err != nil { // network error or something? let's retry
+            log.Println("Recevied error '%v' attempting Giphy request.", err)
+            if retries >= retryAttempts {
+                serverError(w, "Could not execute request.", err)
+                return
+            }
+        } else if giphyResp.StatusCode >= 400 { // if err is nil, then giphyResp is not
+            // none of these errors are recoverable
+            if giphyResp.StatusCode == 414 {
+                http.Error(w, "Query too long.", http.StatusBadRequest)
+                return
+            } // else
+            serverError(
+                w, 
+                fmt.Sprintf("Giphy request failed with unrecoverable error code %d.", 
+                giphyResp.StatusCode,
+            ), err)
+            return
+        }
     }
 
-    defer resp.Body.Close()
-    bodyBytes, err := io.ReadAll(resp.Body)
+    defer giphyResp.Body.Close()
+    bodyBytes, err := io.ReadAll(giphyResp.Body)
     if err != nil {
         serverError(w, "Could not read response body.", err)
         return
