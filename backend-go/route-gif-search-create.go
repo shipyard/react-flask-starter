@@ -11,9 +11,10 @@ import (
 
     "github.com/jackc/pgx/v5"
     "github.com/stoewer/go-strcase"
+    "golang.org/x/sync/errgroup"
 )
 
-const SEARCH_LIMIT = "1"
+const SEARCH_LIMIT = "5"
 
 func gifSearchCreate(w http.ResponseWriter, r *http.Request) {
     conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
@@ -65,6 +66,7 @@ func gifSearchCreate(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+    // Must call this to create the S3 bucket.
     filesReq, err := http.NewRequest("GET", "http://backend:8080/api/v1/files/", nil)
     if err != nil {
         serverError(w, "Error creating S3 bucket request.", err)
@@ -80,6 +82,7 @@ func gifSearchCreate(w http.ResponseWriter, r *http.Request) {
     filesMsg := fmt.Sprintln(buf.String())
     fmt.Println(filesMsg) // DEBUG
 
+    g := new(errgroup.Group)
     var gifUrls []string
     for _, searchResult := range searchResults.Data {
         gifUrl := searchResult.Images.Original.URL
@@ -94,11 +97,16 @@ func gifSearchCreate(w http.ResponseWriter, r *http.Request) {
             "_" + strings.Join(termBits, "_") +
             ".gif"
 
-        err = UploadFileFromUrl(client, gifUrl, fileName)
-        if err != nil {
-            serverError(w, "Error uploading GIF to S3 storage.", err)
-            return
-        }
+        // Download GIFs and upload to S3 asynchronously for efficiency
+        g.Go(func () error {
+            return UploadFileFromUrl(client, gifUrl, fileName)
+        })
+    }
+
+    // wait on all pending downloads to succeed or fail
+    if err = g.Wait(); err != nil {
+        serverError(w, "Error uploading GIFs to S3 storage.", err)
+        return
     }
 
     var id int32
