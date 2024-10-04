@@ -29,17 +29,23 @@ def files():
 def upload():
     if request.method == 'POST':
         if 'file' not in request.files:
-            return jsonify({'message': 'no file'})
+            return "No 'file' defined.", 400
         file = request.files['file']
         if file:
-            timestr = time.strftime('%Y%m%d%H%M%S')
-            ext = secure_filename(file.filename).split('.')[-1]
-            filename = f'upload-{timestr}.{ext}'
+            if file.filename:
+                filename = secure_filename(file.filename)
+            else:
+                timestr = time.strftime('%Y%m%d%H%M%S')
+                ext = file.filename.split('.')[-1]
+                # the suffix is necessary to avoid overwriting files when multiple uploads are done quickly
+                suffix = ''.join(random.choices(string.ascii_letters, k=7))
+                filename = f'upload-{timestr}-{suffix}.{ext}'
             s3_client().put_object(Bucket=BUCKET,
-                                   Key=filename,
+                                   Key=secure_filename(file.filename),
+                                   ContentType=file.mimetype,
                                    Body=file)
 
-            return jsonify(message=filename)
+            return jsonify(message="Uploaded '" + file.filename + "'.")
 
 
 @blueprint.route('/api/v1/files/create/')
