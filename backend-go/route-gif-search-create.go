@@ -84,6 +84,7 @@ func gifSearchCreate(w http.ResponseWriter, r *http.Request) {
 
     g := new(errgroup.Group)
     var gifUrls []string
+    var s3Paths []string
     for _, searchResult := range searchResults.Data {
         gifUrl := searchResult.Images.Original.URL
         gifUrls = append(gifUrls, gifUrl)
@@ -96,6 +97,8 @@ func gifSearchCreate(w http.ResponseWriter, r *http.Request) {
             "_" + strcase.KebabCase(searchResult.Title) +
             "_" + strings.Join(termBits, "_") +
             ".gif"
+        s3Path := "test-bucket/" + fileName
+        s3Paths = append(s3Paths, s3Path)
 
         // Download GIFs and upload to S3 asynchronously for efficiency
         g.Go(func () error {
@@ -112,16 +115,17 @@ func gifSearchCreate(w http.ResponseWriter, r *http.Request) {
     var id int32
     err = conn.QueryRow(
         context.Background(),
-        "INSERT INTO gif_search (search_terms, gif_urls) VALUES ($1, $2) RETURNING id",
+        "INSERT INTO gif_search (search_terms, gif_urls, s3_paths) VALUES ($1, $2, $3) RETURNING id",
         searchTerms,
         gifUrls,
+        s3Paths,
     ).Scan(&id)
     if err != nil {
         serverError(w, "Creating record in database failed.", err)
         return
     }
 
-    responseData := SearchResponse{ID: id, GiphyResponse: searchResults}
+    responseData := SearchResponse{ID: id, GifUrls: gifUrls, S3Paths: s3Paths}
 
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(http.StatusCreated)

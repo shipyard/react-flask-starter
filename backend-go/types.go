@@ -214,6 +214,7 @@ type GiphySearchResults struct {
 }
 
 type SearchResponse struct {
-	ID            int32              `json:"id"`
-	GiphyResponse GiphySearchResults `json:"giphyResponse"`
+	ID      int32    `json:"id"`
+	GifUrls []string `json:"gifUrls"`
+	S3Paths []string `json:"s3Paths"`
 }

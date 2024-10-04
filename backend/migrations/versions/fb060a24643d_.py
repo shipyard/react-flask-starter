@@ -31,6 +31,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('search_terms', sa.ARRAY(sa.Text()), nullable=False),
     sa.Column('gif_urls', sa.ARRAY(sa.Text()), nullable=False),
+    sa.Column('s3_paths', sa.ARRAY(sa.Text()), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
 
