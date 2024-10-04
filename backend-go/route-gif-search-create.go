@@ -3,13 +3,16 @@ package main
 import (
     "context"
     "encoding/json"
+    "errors"
     "fmt"
     "io"
     "log"
     "net/http"
     "os"
     "strings"
+    "time"
 
+    "github.com/cenkalti/backoff/v4"
     "github.com/jackc/pgx/v5"
     "github.com/stoewer/go-strcase"
     "golang.org/x/sync/errgroup"
@@ -49,31 +52,43 @@ func gifSearchCreate(w http.ResponseWriter, r *http.Request) {
     req.URL.RawQuery = q.Encode() // go is weird how you set the URL parameters
 
     var giphyResp *http.Response
-    const retryAttempts = 4
-    retries := 0
-    for giphyResp == nil && retries < retryAttempts { // will actually exit before failing loop, but for clarity
+    GiphySearch := func () error {
         giphyResp, err = client.Do(req)
-        retries += 1
 
         if err != nil { // network error or something? let's retry
-            log.Println("Recevied error '%v' attempting Giphy request.", err)
-            if retries >= retryAttempts {
-                serverError(w, "Could not execute request.", err)
-                return
-            }
+            log.Println("Received error '%v' attempting Giphy request.", err)
+            return err
         } else if giphyResp.StatusCode >= 400 { // if err is nil, then giphyResp is not
             // none of these errors are recoverable
+            permError := backoff.Permanent(errors.New("Donso"))
             if giphyResp.StatusCode == 414 {
                 http.Error(w, "Query too long.", http.StatusBadRequest)
-                return
+                return permError
             } // else
             serverError(
                 w, 
                 fmt.Sprintf("Giphy request failed with unrecoverable error code %d.", 
                 giphyResp.StatusCode,
             ), err)
-            return
+            return permError
         }
+        return nil
+    }
+
+    expBackoff := backoff.NewExponentialBackOff()
+    expBackoff.InitialInterval = 250 * time.Millisecond
+    expBackoff.MaxInterval = 3 * time.Second
+    expBackoff.MaxElapsedTime = 15 * time.Second
+
+    err = backoff.Retry(GiphySearch, expBackoff)
+    if err != nil {
+        // if it's not a permanent error, then we exceeded the retry timeout and haven't set the HTTP response yet
+        if _, isPerm := err.(*backoff.PermanentError); isPerm == false {
+            // then we timed out
+            serverError(w, "Exceeded maximum retries while attempting to contact Giphy service.", err)
+        }
+        // else it's a PermanentError and we've already set the HTTP response, only need to return
+        return // we're done in any case
     }
 
     defer giphyResp.Body.Close()
