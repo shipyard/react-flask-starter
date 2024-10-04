@@ -1,14 +1,21 @@
 package main
 import (
     "fmt"
+    "log"
     "net/http"
 )
 
-func helloWorld(w http.ResponseWriter, r *http.Request) {
-    fmt.Fprintf(w, "Hello, World!\n")
+func serverError(w http.ResponseWriter, message string, err error) {
+    errMsg := fmt.Sprintf("%s (%v)", message, err)
+    log.Println(errMsg)
+    http.Error(w, errMsg, http.StatusInternalServerError)
 }
 
 func main() {
-    http.HandleFunc("/", helloWorld)
-    http.ListenAndServe(":8081", nil)
+    mux := http.NewServeMux()
+
+    mux.HandleFunc("GET /gif-search/{id}", gifSearchGet)
+    mux.HandleFunc("POST /gif-search", gifSearchCreate)
+
+    http.ListenAndServe(":8081", mux)
 }

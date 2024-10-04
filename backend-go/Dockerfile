@@ -4,11 +4,14 @@ FROM golang:1.23-bookworm
 # Set the Current Working Directory inside the container
 WORKDIR /app
 
-# Copy go source
-COPY main.go ./
-
 # Initialize the go module
-RUN go mod init helloworld
+RUN go mod init main
+# Get 3rd party modules
+RUN go get github.com/jackc/pgx/v5
+RUN go get github.com/stoewer/go-strcase
+
+# Copy go source
+COPY *.go ./
 
 # Build the Go app
 RUN go build -o main .
