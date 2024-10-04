@@ -27,6 +27,12 @@ def upgrade():
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
+    op.create_table('gif_search',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('search_terms', sa.ARRAY(sa.Text()), nullable=False),
+    sa.Column('gif_urls', sa.ARRAY(sa.Text()), nullable=False),
+    sa.PrimaryKeyConstraint('id')
+    )
 
 
 def downgrade():
