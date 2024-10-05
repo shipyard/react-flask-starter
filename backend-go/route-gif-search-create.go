@@ -137,7 +137,6 @@ func gifSearchCreate(w http.ResponseWriter, r *http.Request) {
     }
     buf := new(strings.Builder)
     io.Copy(buf, filesRes.Body)
-    filesMsg := fmt.Sprintln(buf.String())
 
     g := new(errgroup.Group)
     var gifUrls []string
