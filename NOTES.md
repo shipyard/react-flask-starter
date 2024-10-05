@@ -73,6 +73,9 @@ I wanted to do the new API in golang since that's the new language of choice. Ov
   - My go server was initially unable to connect to the Postgres database, returning a similar error to the one I got when attempting to manually connect. (In retrospect, this may have been solvable with additional configuration, but seeing as things were acting really weird, I wanted to try and upgrade Postgres anyway.)
   - I tried upgrading to the latest Postgres, but that broke the Python server (possibly incompatible driver; I didn't investigate much).
   - I tried version 13, and that worked for everyone.
+- The `/var/log/postgresql` dir is empty and the [Postgres Docker image page](https://hub.docker.com/_/postgres) doesn't mention anything about where logs would be.
+  - It only mentions the transaction logs, which is the 'write-ahead log', not the process info logs.
+  - I didn't dig into the potsgres documentation; it's possible there's some way to enable the logs? Does the logging dir needs to be mapped to a writeable volume?
 
 ### Unifying the API
 
@@ -100,13 +103,17 @@ I wanted to do the new API in golang since that's the new language of choice. Ov
 
 ## Recommendations
 
-- Update the `pyproject.toml` requirements to pin the indirect library requirements since flask doesn't bother to specify it's actual requirements and will break when the requirements are updated. (Already done in [`shipyard/flask-react-starter` PR#19](https://github.com/shipyard/react-flask-starter/pull/19) submitted by myself).
+- (Done!) Update the `pyproject.toml` requirements to pin the indirect library requirements since flask doesn't bother to specify it's actual requirements and will break when the requirements are updated. (Already done in [`shipyard/flask-react-starter` PR#19](https://github.com/shipyard/react-flask-starter/pull/19) submitted by myself).
 - Provide instruction on where to find the GIF URL in the Giphy results and note that programmatic retrieval will retrieve the actual GIF even though viewing the URL through a browser does not.
 - <span id="files-upload-fix"></span>Update the `/api/vi/files/upload/` endpoint to:
   1. [Fix return status when no 'file' provided to `/api/vi/files/upload/`.](https://github.com/zanerock/react-flask-starter/blob/main/backend/src/routes/localstack.py#L32)
   2. [Use `file.filename` for the file (if provided) and generate a filename (== object Key) only if necessary and fix the generated filename logic which results in the same filename being created for multiple uploads within the same second.](https://github.com/zanerock/react-flask-starter/blob/main/backend/src/routes/localstack.py#L35)
   3. [Take cognizance of the file 'Content-Type'.](https://github.com/zanerock/react-flask-starter/blob/main/backend/src/routes/localstack.py#L45)
-  You can see my changes [here].
+  You can see my changes [here](https://github.com/zanerock/react-flask-starter/blob/main/backend/src/routes/localstack.py#L29).
+- Provide some guidance on Postgres.
+  - How can you get SQL files to run so you can add tables?
+  - How can you connect to the Postgres database?
+  - How can you enable/get logs?
 
 ## TODOs
 
