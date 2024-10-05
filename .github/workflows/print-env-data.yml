@@ -6,7 +6,7 @@ jobs:
     name: Get Shipyard environment data
     outputs:
       shipyard_url: ${{ steps.shipyard_url.outputs.SHIPYARD_URL }}
-      bypass_token: ${{ steps.bypass_token.outputs.SHIPYARD_BYPASS_TOKEN }}
+      bypass_token: ${{ steps.bypass_token.outputs.BYPASS_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,6 +31,9 @@ jobs:
     name: Search GIFs and save artifacts
     runs-on: ubuntu-latest
     needs: shipyard-env-data
+    strategy:
+        matrix:
+            i: [1,2,3,4,5]
     steps:
       - uses: boonya/gh-action-name-generator@v1
         id: search_word
@@ -59,5 +62,5 @@ jobs:
       - name: Save image
         uses: actions/upload-artifact@v4
         with:
-          name: "${{ steps.search_word.outputs.name }} image #1"
+          name: "${{ steps.search_word.outputs.name }} image #${{ matrix.i }}"
           path: '${{ fromJson(steps.search_search_word.outputs.response).s3Paths[0] }}'
