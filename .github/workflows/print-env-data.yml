@@ -52,7 +52,9 @@ jobs:
           url: '${{ env.SHIPYARD_ENVIRONMENT_URL }}/api/v1/gif-search?q=${{ steps.word1.outputs.name }}&shipyard_token=${{ env.SHIPYARD_BYPASS_TOKEN }}&giphy_api_key=${{ secrets.GIPHY_API_KEY }}'
           method: 'POST'
       - name: Retrieve first GIF from search
-        run: curl -o '${{ fromJson(steps.search_word1.outputs.response).s3Paths[0] }}' '{{ env.SHIPYARD_ENVIRONMENT_URL }}/${{ fromJson(steps.search_word1.outputs.response).s3Paths[0] }}?shipyard_token=${{ env.SHIPYARD_BYPASS_TOKEN }}'
+        run: curl -o '${{ fromJson(steps.search_word1.outputs.response).s3Paths[0] }}' '${{ env.SHIPYARD_ENVIRONMENT_URL }}/${{ fromJson(steps.search_word1.outputs.response).s3Paths[0] }}?shipyard_token=${{ env.SHIPYARD_BYPASS_TOKEN }}'
+      # http-request-action can save the response to a file, but it's mangling the data for some reason and the GIF 
+      # comes out unreadable
       #- name: Retrieve first GIF from search
       #  uses: fjogeleit/http-request-action@v1
       #  with:
