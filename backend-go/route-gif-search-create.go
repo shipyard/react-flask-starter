@@ -19,6 +19,8 @@ import (
 )
 
 const SEARCH_LIMIT = "5"
+const GIPHY_QUERY_KEY = "giphy_api_key"
+const GIPHY_ENV_KEY = "GIPHY_API_KEY"
 
 func gifSearchCreate(w http.ResponseWriter, r *http.Request) {
     conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
@@ -32,8 +34,26 @@ func gifSearchCreate(w http.ResponseWriter, r *http.Request) {
 
     client := &http.Client{}
 
-    var apiKey = os.Getenv("GLIPHY_API_KEY")
-    var searchTerms = r.URL.Query()["q"]
+    reqQuery := r.URL.Query()
+
+    var apiKey string
+    apiKeyParam := reqQuery[GIPHY_QUERY_KEY]
+    if apiKeyParam == nil {
+        apiKey = os.Getenv(GIPHY_ENV_KEY)
+    } else {
+        apiKey = apiKeyParam[0]
+    }
+    if apiKey == "" {
+        http.Error(w, 
+            fmt.Sprintf("Did not find Giphy API key in request parameter '%s' or server environment variable '%s'.",
+                GIPHY_QUERY_KEY, 
+                GIPHY_ENV_KEY,
+            ),
+            http.StatusBadRequest,
+        )
+        return
+    }
+    searchTerms := reqQuery["q"]
     if searchTerms == nil {
         http.Error(w, "Must provide at least one query parameter 'q'.", http.StatusBadRequest)
         return

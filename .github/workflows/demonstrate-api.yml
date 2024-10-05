@@ -1,0 +1,66 @@
+on: [push]
+
+jobs:
+  shipyard-env-data:
+    runs-on: ubuntu-latest
+    name: Get Shipyard environment data
+    outputs:
+      shipyard_url: ${{ steps.shipyard_url.outputs.SHIPYARD_URL }}
+      bypass_token: ${{ steps.bypass_token.outputs.BYPASS_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Integrate Shipyard
+        uses: shipyard/shipyard-action@1.0.0
+        with:
+          api-token: ${{ secrets.SHIPYARD_API_TOKEN }}
+          timeout-minutes: "10"
+      - name: Print Env Data
+        run: |
+          export CYPRESS_BASE_URL=${SHIPYARD_ENVIRONMENT_URL}
+          export CYPRESS_BYPASS_TOKEN=${SHIPYARD_BYPASS_TOKEN}
+          env | grep -e SHIPYARD -e CYPRESS
+        shell: bash
+      - name: Sets Shipyard environment URL
+        id: shipyard_url
+        run: echo "SHIPYARD_URL=${{ env.SHIPYARD_ENVIRONMENT_URL }}" >> "$GITHUB_OUTPUT"
+      - name: Sets Shipyard bypass token
+        id: bypass_token
+        run: echo "BYPASS_TOKEN=${{ env.SHIPYARD_BYPASS_TOKEN }}" >> "$GITHUB_OUTPUT"
+  search-gifs-and-save-artifacts:
+    name: Search GIFs and save artifacts
+    runs-on: ubuntu-latest
+    needs: shipyard-env-data
+    strategy:
+        matrix:
+            i: [1,2,3,4,5]
+    steps:
+      - uses: boonya/gh-action-name-generator@v1
+        id: search_word
+        with:
+          length: 1
+          style: lowerCase
+      - run: mkdir test-bucket
+        shell: bash
+      - name: Search GIFs and save result
+        id: search_search_word
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: '${{ needs.shipyard-env-data.outputs.shipyard_url }}/api/v1/gif-search?q=${{ steps.search_word.outputs.name }}&shipyard_token=${{ needs.shipyard-env-data.outputs.bypass_token }}&giphy_api_key=${{ secrets.GIPHY_API_KEY }}'
+          method: 'POST'
+      - name: Retrieve first GIF from search
+        run: curl -o '${{ fromJson(steps.search_search_word.outputs.response).s3Paths[0] }}' '${{ needs.shipyard-env-data.outputs.shipyard_url }}/${{ fromJson(steps.search_search_word.outputs.response).s3Paths[0] }}?shipyard_token=${{ needs.shipyard-env-data.outputs.bypass_token }}'
+      # http-request-action can save the response to a file, but it's mangling the data for some reason and the GIF 
+      # comes out unreadable
+      #- name: Retrieve first GIF from search
+      #  uses: fjogeleit/http-request-action@v1
+      #  with:
+      #    url: '${{ env.SHIPYARD_ENVIRONMENT_URL }}/${{ fromJson(steps.search_search_word.outputs.response).s3Paths[0] }}?shipyard_token=${{ env.SHIPYARD_BYPASS_TOKEN }}'
+      #    method: 'GET'
+      #    contentType: image/gif
+      #    responseFile: '${{ fromJson(steps.search_search_word.outputs.response).s3Paths[0] }}'
+      - name: Save image
+        uses: actions/upload-artifact@v4
+        with:
+          name: "${{ steps.search_word.outputs.name }} image #${{ matrix.i }}"
+          path: '${{ fromJson(steps.search_search_word.outputs.response).s3Paths[0] }}'
