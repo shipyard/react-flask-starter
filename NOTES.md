@@ -1,12 +1,35 @@
 # Notes
 
-## Issue and solutions
+## Running
 
-- I wanted to do the new API in golang since that's the new language of choice. Overall, this was pretty smooth, but there were [a few issues directly related to go](#go-related-issues).
+If you want to run your own version of 'zanerock/react-flask-starter':
+1. Get a Giphy API token.
+2. Get your Shipayrd API token.
+
+When running locally:
+- Create a `.env.development.local` with `GIPHY_API_KEY=< your Giphy API key>`. This way, you can call `/api/v1/gif-search` without needing to set the `giphy_api_key` URL parameter.
+- You can call all the API and S3 bucket endpoints from `http://localhost:8080` thanks to the reverse proxy routing.
+
+To support the GitHub Action, add the following secrets to your GitHub repo:
+- `GIPHY_API_KEY`
+- `SHIPYARD_API_TOKEN`
+
+## Cool stuff
+
+- Added [Go based server to handle new API endpoints](https://github.com/zanerock/react-flask-starter/tree/main/backend-go) with [new service in the `docker-compose.yml` file](https://github.com/zanerock/react-flask-starter/blob/main/docker-compose.yml#L32).
+- Added nginx reverse proxy to the [`docker-compose.yml`](https://github.com/zanerock/react-flask-starter/blob/main/docker-compose.yml#L85) with a [simple configuration](https://github.com/zanerock/react-flask-starter/blob/main/proxy/reverse_proxy.conf).
+- Made it so you can set the Giphy API key in the go server's host environment to simplify calls to the `/api/v1/gif-search` endpoint.
+- The `/api/v1/gif-search` endpoint downloads the GIF images and [uploads them to the S3 bucket in parallel using Goroutines](https://github.com/zanerock/react-flask-starter/blob/main/backend-go/route-gif-search-create.go#L162).
+- [The call to Giphy is automatically retried with exponential backoff.](https://github.com/zanerock/react-flask-starter/blob/main/backend-go/route-gif-search-create.go#L103)
+- There's pretty decent error reporting and correct status stetting (400 vs 500) throughout.
+
+## Issue and solutions
 
 ### Go based API related issues
 
-- Tranlating JSON to and from go structs is notoriously tedious. Luckily, knowing this I searched for and found [this handy JSON to go struct tool](https://mholt.github.io/json-to-go/) which I used to generate the necessary code (which I then broke up into parts). TODO: link to code.
+I wanted to do the new API in golang since that's the new language of choice. Overall, this was pretty smooth, but there were a few issues directly related to go.
+
+- Tranlating JSON to and from go structs is notoriously tedious. Luckily, knowing this I searched for and found [this handy JSON to go struct tool](https://mholt.github.io/json-to-go/) which I used to generate the [necessary code](https://github.com/zanerock/react-flask-starter/blob/main/backend-go/types.go) (which I then broke up into parts). TODO: link to code.
 - I ran into an issue when calling `/api/v1/files/upload` from the go server. I would get "HTTP/1.x transport connection broken" errors and it wasn't clear why.
   - Eventually, I looked at the HTML spec for ['Form content types'](https://www.w3.org/TR/html401/interact/forms.html#h-17.13.4) and compared the example for 'multipart/form-data' request bodies with embedded file data to what the go server was sending to the python endpoint and I eventually noticed that the closing boundary string was missing from the request the go server was sending.
   - It turns out that the position of the `multipartWriter.Close()` is critical and must come before the upload request object is created. While this does make sense, it's a bit idiomatic as typically closing a resource is done with a `defer` statement and has no effect on the actual contents. To be fair, this [is noted in the go mime/multipart docs](https://pkg.go.dev/mime/multipart#Writer.Close), but not the other parts of the `Part` and `multipart.Writer` docs that I did read. The tutorials/examples I'd referenced ([here](https://hayageek.com/golang-send-file-upload-with-post-request/) and [here](https://stackoverflow.com/questions/51234464/upload-a-file-with-post-request-golang)) did show the `Close()` in the proper place an I'm not sure how it got messed up in the first place (since I did copy the example code as a starting point). I think I had some other error, and had maybe moved things around not realizing the significance of the timing of the `Close()`. Mostly just bad luck on this one.
@@ -21,7 +44,7 @@
 
 - It's a bit odd that the `/api/v1/files/` endpoint needs to be called to create the S3 bucket. It's an odd side effect that I luckily sussed out pretty quick, but it would be good to note this or, better yet, create the bucket as part of the Python server initialization.
 - The existing `/api/v1/files/uploads` does not use the specified filename of the uploaded file and instead creates a generic time based name.
-  - This contradicts the directions in the provided spec.
+  - This seems to contradict the directions in the provided spec. While you could take the direction in the spec to refer to only the artifacts saved with the GitHub action, it's not clear.
   - It also means that multiple files uploaded within the same second will overwrite each other.
   - See [suggested fix](#files-upload-fix).
 
@@ -70,7 +93,15 @@
 
 - Update the `pyproject.toml` requirements to pin the indirect library requirements since flask doesn't bother to specify it's actual requirements and will break when the requirements are updated. (Already done in [`shipyard/flask-react-starter` PR#19](https://github.com/shipyard/react-flask-starter/pull/19) submitted by myself).
 - Provide instruction on where to find the GIF URL in the Giphy results and note that programmatic retrieval will retrieve the actual GIF even though viewing the URL through a browser does not.
-- <span id="files-upload-fix"></span>Update the `/api/vi/files/upload/` endpoint to: TODO: create and submit PR.
-  1. Take cognizance of the file 'Content-Type'.
-  2. Use `file.filename` for the file (if provided) and generate a filename (== object Key) only if necessary.
-  3. Fix the generated filename logic which results in the same filename being created for multiple uploads within the same second.
+- <span id="files-upload-fix"></span>Update the `/api/vi/files/upload/` endpoint to:
+  1. [Fix return status when no 'file' provided to `/api/vi/files/upload/`.](https://github.com/zanerock/react-flask-starter/blob/main/backend/src/routes/localstack.py#L32)
+  2. [Use `file.filename` for the file (if provided) and generate a filename (== object Key) only if necessary and fix the generated filename logic which results in the same filename being created for multiple uploads within the same second.](https://github.com/zanerock/react-flask-starter/blob/main/backend/src/routes/localstack.py#L35)
+  3. [Take cognizance of the file 'Content-Type'.](https://github.com/zanerock/react-flask-starter/blob/main/backend/src/routes/localstack.py#L45)
+  You can see my changes [here].
+
+## TODOs
+
+If this were a real project I would:
+- Include proper method documentation.
+- Do unit testing.
+- Provide more extensive integration testing in the GitHub workflows.
