@@ -1,12 +1,12 @@
 on: [push]
 
 jobs:
-  print-env-data:
+  fetch-and-display-images:
     runs-on: ubuntu-latest
     name: Fetch Shipyard Vars
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Integrate Shipyard
         uses: shipyard/shipyard-action@1.0.0
         with:
@@ -18,3 +18,24 @@ jobs:
           export CYPRESS_BYPASS_TOKEN=${SHIPYARD_BYPASS_TOKEN}
           env | grep -e SHIPYARD -e CYPRESS
         shell: bash
+      - uses: boonya/gh-action-name-generator@v1
+        id: word1
+        with:
+          length: 1
+      - uses: boonya/gh-action-name-generator@v1
+        id: word2
+        with:
+          length: 1
+      - uses: boonya/gh-action-name-generator@v1
+        id: word3
+        with:
+          length: 1
+      - uses: boonya/gh-action-name-generator@v1
+        id: word4
+        with:
+          length: 1
+      - uses: boonya/gh-action-name-generator@v1
+        id: word5
+        with:
+          length: 1
+      - run: echo "Generated words: ${{ steps.word1.outputs.name }}, ${{ steps.word2.outputs.name }}, ${{ steps.word3.outputs.name }}, ${{ steps.word4.outputs.name }}, ${{ steps.word5.outputs.name }}."
