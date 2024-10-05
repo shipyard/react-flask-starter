@@ -59,28 +59,37 @@ I wanted to do the new API in golang since that's the new language of choice. Ov
 
 ### Postgres/data storage issues
 
-- I needed to add a table to Postgres to store the results of the (processed) Giphy search, however, I ran into some real issues on this one.
-  - The Postgres image page talked about putting scripts in `docker-entrypoint-init.d`, and I wanted to have an SQL file to create the `gif_search` table so I could store the results for the `/gif-search` endpoint (and retrieve them for `/gif-search/{id}`), but I ran into issues. Looking at the [`Dockerfile`](https://github.com/docker-library/postgres/blob/ce54cce510ed5da4ed9e1e66ddeb6e3300786813/13/bookworm/Dockerfile), I see where it [creates the directory in the Docker virtual host](https://github.com/docker-library/postgres/blob/ce54cce510ed5da4ed9e1e66ddeb6e3300786813/13/bookworm/Dockerfile#L75), however, I couldn't figure out how local scripts get copied to it... I even tried copying the `Dockerfile` and init scripts to a `database/` dir, adding the `COPY` commands to the new `database/Dockerfile` and building from that setup, but it still didn't seem to work. I read through the [`docker-entrypoint.sh`](https://github.com/docker-library/postgres/blob/ce54cce510ed5da4ed9e1e66ddeb6e3300786813/13/bookworm/docker-entrypoint.sh) setup script, and I could see where it was supposed to [process the SQL files](https://github.com/docker-library/postgres/blob/ce54cce510ed5da4ed9e1e66ddeb6e3300786813/13/bookworm/docker-entrypoint.sh#L195), but it didn't seem to be.
+- I wanted to have an SQL file to create the `gif_search` table so I could store the results for the `/gif-search` endpoint (and retrieve them for `/gif-search/{id}`), but I ran into issues.
+  - The Postgres image page talked about putting scripts in `/docker-entrypoint-init.d`, so I tried mapping a local directory to that directory on the host, but it wasn't creating the table and the logs were silent. I'm pretty sure my script was good, but I couldn't test it directly (see below).
+  - Looking at the [`Dockerfile`](https://github.com/docker-library/postgres/blob/ce54cce510ed5da4ed9e1e66ddeb6e3300786813/13/bookworm/Dockerfile), I see where it [creates the directory in the Docker virtual host](https://github.com/docker-library/postgres/blob/ce54cce510ed5da4ed9e1e66ddeb6e3300786813/13/bookworm/Dockerfile#L75), but there didn't see to a `COPY` or anything.
+  - I even tried copying the `Dockerfile` and init scripts to a `database/` dir, adding the `COPY` commands to the new `database/Dockerfile` and building from that setup, but it still didn't seem to work. I read through the [`docker-entrypoint.sh`](https://github.com/docker-library/postgres/blob/ce54cce510ed5da4ed9e1e66ddeb6e3300786813/13/bookworm/docker-entrypoint.sh) setup script, and I could see where it was supposed to [process the SQL files](https://github.com/docker-library/postgres/blob/ce54cce510ed5da4ed9e1e66ddeb6e3300786813/13/bookworm/docker-entrypoint.sh#L195), but it didn't seem to be.
   - The black box nature of everything was further deepened by the fact that no matter what I did, I was unable to connect to the Postgres DB directly. `psql -h localhost` failed with: "connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused" (repeated err messages for IPV6 localhost).
   - I got the same result when attempting to connect from my local machine, and when logged into the Postgres server.
   - Even more mysterious, when I would run `ps aux` as root, it would only show the shell and `ps` process itself (with the original postgres 9.6 image).
   - I even tried looking directly in `/proc`, but it only showed the shell and `ls` processes.
   - Rather than try to debug the setup scripts with all this weirdness, I decided to look around in the existing source to see how it sets up the tables used in the ping API and found what I needed in the `migrations` folder.
   - I dug up the sqlalchemy 1.3 docs and figured out pretty quickly how to setup the new table I needed.
-  - There were also issues connecting Go to the DB.
+- There were also issues connecting Go to the DB.
   - My go server was initially unable to connect to the Postgres database, returning a similar error to the one I got when attempting to manually connect. (In retrospect, this may have been solvable with additional configuration, but seeing as things were acting really weird, I wanted to try and upgrade Postgres anyway.)
   - I tried upgrading to the latest Postgres, but that broke the Python server (possibly incompatible driver; I didn't investigate much).
   - I tried version 13, and that worked for everyone.
-- As part of the above attempted fixes, I up changing the Docker VM mount post of the Postgres data directory so the Postgres image could use the default data location.
 
 ### Unifying the API
 
-- At first, I thought I could use the python server as a proxy for the golang server, so I wanted to install the 'requests' package, which led to the following odyssey. It ended up being a distraction because I realized that it would be more realistic and not really any harder to just put an nginx proxy in front of both the servers.
+- Wanted to be able to hit the Python and Go server through the same host+port.
+- Looked for a Go package to (reverse) proxy the calls to Python.
+- Looked for a Python package to (reverse) proxy the calls to Go.
+- Decided cleanest/simplest would be leverage Docker Compose and add an nginx reverse proxy (configuration ended up being 3 entries).
+- I realized later that it might be possible to do something like this using Shipyard configurations, but I still think it's nice to have something that works the same for local and shipyard builds.
+
+### Adding Python packages
+
+- I ended up not needing to change the packages, but once I ran into the issue of flask breaking, I felt compelled to figure out a solution.
   - Had to mess around with local install of python in order to be able to install poetry so I can run `poetry lock`.
   - Regenerating the lock file caused breakage because apparently all Python projects are shit at specifying requirements; would find the breakage was due to incompatible changes included in a dependency whose version was non specified.
   - At first tried upgrading to supported packages, but that just caused a cascade of failures, again, due to multiple Python packages failing to actually specify dependency versions.
-  - Eventually used the original, working `poetry.lock` to extract the specific installed working versions of lib; iteratively explicitly specify lib in `pyproject.toml`, run `poetry lock`, and attempt restart, hit another dependency failure, repeat.
-  - The following seemed to work:
+  - Decided to use the original, working `poetry.lock` to extract the specific installed working versions of libs; iteratively explicitly specify lib in `pyproject.toml`, run `poetry lock`, and attempt restart, hit another dependency failure, repeat.
+  - Adding the following seemed to work:
   ```
   jinja2 = "2.11.3"
   markupsafe = "1.1.1"
