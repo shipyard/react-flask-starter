@@ -1,9 +1,9 @@
 on: [push]
 
 jobs:
-  fetch-and-display-images:
+  setup:
     runs-on: ubuntu-latest
-    name: Fetch Shipyard Vars
+    name: Fetch random words
     steps:
       - uses: boonya/gh-action-name-generator@v1
         id: word1
@@ -45,22 +45,21 @@ jobs:
         shell: bash
       - run: mkdir test-bucket
         shell: bash
-      - uses: fjogeleit/http-request-action@v1
+      - name: Search GIFs and save result
+        uses: fjogeleit/http-request-action@v1
         with:
           url: '${{ env.SHIPYARD_ENVIRONMENT_URL }}/api/v1/gif-search?q=${{ steps.word1.outputs.name }}&shipyard_token=${{ env.SHIPYARD_BYPASS_TOKEN }}&giphy_api_key=${{ secrets.GIPHY_API_KEY }}'
           method: 'POST'
-      - uses: fjogeleit/http-request-action@v1
-        id: search_word1
-        with:
-          url: '${{ env.SHIPYARD_ENVIRONMENT_URL }}/api/v1/gif-search?q=${{ steps.word1.outputs.name }}&shipyard_token=${{ env.SHIPYARD_BYPASS_TOKEN }}&giphy_api_key=${{ secrets.GIPHY_API_KEY }}'
-          method: 'POST'
-      - uses: fjogeleit/http-request-action@v1
+      - name: Retrieve first GIF from search
+        uses: fjogeleit/http-request-action@v1
         with:
           url: '${{ env.SHIPYARD_ENVIRONMENT_URL }}/${{ fromJson(steps.search_word1.outputs.response).s3Paths[0] }}?shipyard_token=${{ env.SHIPYARD_BYPASS_TOKEN }}'
           method: 'GET'
+          contentType: image/gif
           responseFile: '${{ fromJson(steps.search_word1.outputs.response).s3Paths[0] }}'
-      - uses: actions/upload-artifact@v4
+      - name: Save image
+        uses: actions/upload-artifact@v4
         with:
           name: "${{ steps.word1.outputs.name }} image #1"
           path: '${{ fromJson(steps.search_word1.outputs.response).s3Paths[0] }}'
-
+          compression-level: 0
