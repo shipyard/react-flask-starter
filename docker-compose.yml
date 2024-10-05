@@ -3,8 +3,6 @@ version: '3'
 services:
 
   frontend:
-    labels:
-      shipyard.route: '/'
     build: 'frontend'
     environment:
       CI: 'true'
@@ -18,8 +16,6 @@ services:
       - '3000:3000'
 
   backend:
-    labels:
-      shipyard.route: '/api'
     build: 'backend'
     environment:
       DATABASE_URL: 'postgres://obscure-user:obscure-password@postgres/app'
@@ -31,7 +27,7 @@ services:
       - './backend/migrations:/srv/migrations'
       - './backend/src:/srv/src:ro'
     ports:
-      - '8080:8080'
+      - '8082:8082'
 
   backend-go:
     build: 'backend-go'
@@ -85,6 +81,17 @@ services:
     ports:
       - "127.0.0.1:4566:4566"            # LocalStack Gateway
       - "127.0.0.1:4510-4559:4510-4559"  # external services port range
+
+  proxy:
+    image: 'nginx:1.27'
+    labels:
+      shipyard.route: '/'
+    environment:
+      - NGINX_PORT=8080
+    volumes:
+      - ./proxy/reverse_proxy.conf:/etc/nginx/nginx.conf
+    ports:
+      - '8080:8080'
 
 volumes:
   postgres:

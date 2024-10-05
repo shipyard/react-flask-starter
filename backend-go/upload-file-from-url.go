@@ -40,7 +40,7 @@ func UploadFileFromUrl(client *http.Client, url string, fileName string) error {
 
 	multipartWriter.Close()
 
-	uploadReq, err := http.NewRequest("POST", "http://backend:8080/api/v1/files/upload/", body)
+	uploadReq, err := http.NewRequest("POST", "http://backend:8082/api/v1/files/upload/", body)
 	uploadReq.Header.Add("Content-Type", multipartWriter.FormDataContentType())
 
   uploadResponse, err := client.Do(uploadReq)
