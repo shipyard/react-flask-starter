@@ -105,7 +105,7 @@ func gifSearchCreate(w http.ResponseWriter, r *http.Request) {
     }
 
     // Must call this to create the S3 bucket.
-    filesReq, err := http.NewRequest("GET", "http://backend:8080/api/v1/files/", nil)
+    filesReq, err := http.NewRequest("GET", "http://backend:8082/api/v1/files/", nil)
     if err != nil {
         serverError(w, "Error creating S3 bucket request.", err)
         return
