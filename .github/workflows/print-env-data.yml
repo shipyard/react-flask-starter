@@ -43,6 +43,8 @@ jobs:
           export CYPRESS_BYPASS_TOKEN=${SHIPYARD_BYPASS_TOKEN}
           env | grep -e SHIPYARD -e CYPRESS
         shell: bash
+      - run: mkdir test-bucket
+        shell: bash
       - uses: fjogeleit/http-request-action@v1
         with:
           url: '${{ env.SHIPYARD_ENVIRONMENT_URL }}/api/v1/gif-search?q=${{ steps.word1.outputs.name }}&shipyard_token=${{ env.SHIPYARD_BYPASS_TOKEN }}&giphy_api_key=${{ secrets.GIPHY_API_KEY }}'
