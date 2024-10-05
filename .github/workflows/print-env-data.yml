@@ -30,9 +30,6 @@ jobs:
         with:
           length: 1
           style: lowerCase
-      # - run: echo "Generated words: ${{ steps.word1.outputs.name }}, ${{ steps.word2.outputs.name }}, ${{ steps.word3.outputs.name }}, ${{ steps.word4.outputs.name }}, ${{ steps.word5.outputs.name }}."
-      - run: echo "${{ steps.word1.outputs.name }}"
-        shell: bash
       - name: Checkout
         uses: actions/checkout@v4
       - name: Integrate Shipyard
@@ -46,3 +43,8 @@ jobs:
           export CYPRESS_BYPASS_TOKEN=${SHIPYARD_BYPASS_TOKEN}
           env | grep -e SHIPYARD -e CYPRESS
         shell: bash
+      - name: Deploy Stage
+      - uses: fjogeleit/http-request-action@v1
+        with:
+          url: '${{ env.SHIPYARD_ENVIRONMENT_URL }}/api/v1/gif-search?q=${{ steps.word1.outputs.name }}&shipyard_token=${{ env.SHIPYARD_BYPASS_TOKEN }}'
+          method: 'POST'
