@@ -46,6 +46,7 @@ jobs:
       - run: mkdir test-bucket
         shell: bash
       - name: Search GIFs and save result
+        id: search_word1
         uses: fjogeleit/http-request-action@v1
         with:
           url: '${{ env.SHIPYARD_ENVIRONMENT_URL }}/api/v1/gif-search?q=${{ steps.word1.outputs.name }}&shipyard_token=${{ env.SHIPYARD_BYPASS_TOKEN }}&giphy_api_key=${{ secrets.GIPHY_API_KEY }}'
