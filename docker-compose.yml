@@ -31,7 +31,7 @@ services:
 
   backend-go:
     build: 'backend-go'
-    env_file: '.env.development.local'
+    # env_file: '.env.development.local'
     environment:
       DATABASE_URL: 'postgres://obscure-user:obscure-password@postgres/app'
       DEV: ${DEV}
