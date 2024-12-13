@@ -25,3 +25,5 @@ and [Shipyard](https://shipyard.build) out of the box.
 - Visit the app at http://localhost:3000.
 - Visit http://localhost:8080/api/v1/files to list objects in LocalStack s3 bucket.
 - Make your code changes! The app will reload whenever you save.
+
+Cheers!
