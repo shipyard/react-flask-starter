@@ -50,6 +50,10 @@ services:
 
   postgres:
     image: 'postgres:9.6-alpine'
+    labels:
+      shipyard.init: "chown -R 10001:10001 /var/opt/mssql/data"
+      shipyard.init.container: "true"
+      shipyard.init.container.image: busybox
     environment:
       POSTGRES_USER: 'obscure-user'
       POSTGRES_PASSWORD: 'obscure-password'
