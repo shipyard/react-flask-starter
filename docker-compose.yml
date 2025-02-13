@@ -51,7 +51,7 @@ services:
   postgres:
     image: 'postgres:9.6-alpine'
     labels:
-      shipyard.init: "chown -R 10001:10001 /var/opt/mssql/data"
+      shipyard.init: "chown -R 10001:10001 /var/lib/postgresql/data/pgdata"
       shipyard.init.container: "true"
       shipyard.init.container.image: busybox
     environment:
