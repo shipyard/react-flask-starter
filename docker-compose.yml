@@ -69,6 +69,27 @@ services:
     ports:
       - '6379'
 
+  python-migrate:
+    <<: *backend-base
+    labels:
+      shipyard.job: true
+    command: >
+      sh -c 'echo "[DeprecationWarning] The use of legacy migration strategy is deprecated.";
+      echo "Traceback (most recent call last):";
+      echo "  File \"manage.py\", line 22, in <module>";
+      echo "    execute_from_command_line(sys.argv)";
+      echo "  File \"/usr/local/lib/python3.9/site-packages/django/core/management/__init__.py\", line 394, in execute_from_command_line";
+      echo "    utility.execute()";
+      echo "  File \"/usr/local/lib/python3.9/site-packages/django/core/management/__init__.py\", line 388, in execute";
+      echo "    django.setup()";
+      echo "  File \"/usr/local/lib/python3.9/site-packages/django/__init__.py\", line 24, in setup";
+      echo "    apps.populate(settings.INSTALLED_APPS)";
+      echo "django.db.migrations.exceptions.MigrationError: Migration failure: current transaction is aborted, commands ignored until end of transaction block";
+      exit 1'
+    depends_on:
+      - postgres
+      - redis
+      
   localstack:
     image: 'localstack/localstack:2.3.0'
     environment:
