@@ -16,6 +16,8 @@ services:
       - './frontend/public:/app/public'
     ports:
       - '3000:3000'
+    depends_on:
+      - backend
 
   backend:
     labels:
@@ -32,6 +34,10 @@ services:
       - './backend/src:/srv/src:ro'
     ports:
       - '8080:8080'
+    depends_on:
+      - postgres
+      - redis
+      - localstack
 
   worker:
     labels:
@@ -47,6 +53,10 @@ services:
       - './backend/filesystem/entrypoints:/entrypoints:ro'
       - './backend/migrations:/srv/migrations'
       - './backend/src:/srv/src:ro'
+    depends_on:
+      - postgres
+      - redis
+      - localstack
 
   postgres:
     image: 'postgres:9.6-alpine'

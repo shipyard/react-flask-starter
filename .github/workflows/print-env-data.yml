@@ -11,7 +11,7 @@ jobs:
         uses: shipyard/shipyard-action@1.0.0
         with:
           api-token: ${{ secrets.SHIPYARD_API_TOKEN }}
-          timeout-minutes: "10"
+          timeout-minutes: 10
       - name: Print Env Data
         run: |
           export CYPRESS_BASE_URL=${SHIPYARD_ENVIRONMENT_URL}
